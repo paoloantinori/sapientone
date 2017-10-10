@@ -1,0 +1,16 @@
+{
+    "name": "Jungla",
+    "timer": {
+        "timeout": "180"
+    },
+    "questions": [
+        {
+            "question" : "Trova l'elefante",
+            "answer": [ 1 ]
+        },
+        {
+            "question" : "Trova la tigri, partendo dalla tua sinistra",
+            "answer": [ 2 , 4]
+        }
+    ]
+}

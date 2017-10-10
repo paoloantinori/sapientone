@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title>Sapientone</title>
+  </head>
+  <body>
+      <h1>Sapientone</h1>
+      <a href="/static/index.html">Play </a>
+      <ul>
+      {% for file in files %}
+        <li><a href="/play/{{ file }}">{{ file }}</a></li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

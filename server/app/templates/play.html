@@ -1,0 +1,32 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sapientone</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/foundation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-x grid-padding-x">
+        <div class="large-12 cell">
+          <h1>Sapientone</h1>
+        </div>
+      </div>
+      <div class="alert progress">
+        <div class="progress-meter" style="width: 75%">
+          <p class="progress-meter-text">75%</p>
+        </div>
+      </div>
+      <h1>Play {{ game }}</h1>
+      <h2>{{ data }}</h2>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/vendor/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vendor/what-input.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vendor/foundation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
