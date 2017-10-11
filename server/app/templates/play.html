@@ -28,5 +28,36 @@
     <script src="{{ url_for('static', filename='js/vendor/what-input.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vendor/foundation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.slim.js') }}"></script>
+    <script type="text/javascript" charset="utf-8">
+        // Connect to the Socket.IO server.
+        // The connection URL has the following format:
+        //     http[s]://<domain>:<port>[/<namespace>]
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + "/test");
+
+        socket.on('next question', function(next){
+          console.log('message: ' + next);
+          // similar behavior as clicking on a link
+          window.location.href = "/question/" + next;
+        });
+
+        socket.on('win', function(next){
+          console.log('message: ' + next);
+          // similar behavior as clicking on a link
+          window.location.href = "/win";
+        });
+        socket.on('lost', function(next){
+          console.log('message: ' + next);
+          // similar behavior as clicking on a link
+          window.location.href = "/lost";
+        });
+        // Event handler for new connections.
+        // The callback function is invoked when a connection with the
+        // server is established.
+        socket.on('connect', function() {
+          socket.emit('my event', {data: 'I\'m connected!'});
+        });
+    </script>
   </body>
 </html>

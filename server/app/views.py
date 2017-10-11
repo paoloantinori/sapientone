@@ -1,11 +1,12 @@
 import os
 import sys
 import json
-from threading import Thread
+from threading import Thread, Lock
 import logging
 from werkzeug.utils import secure_filename
-from app import app
-from flask import render_template, request, redirect, url_for
+from app import app,socketio
+from flask import render_template, request, redirect, url_for, copy_current_request_context
+from flask_socketio import send, emit
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
@@ -13,37 +14,11 @@ ALLOWED_EXTENSIONS = set(['txt', 'json'])
 current_question = 0
 current_game = {}
 server = None
+thread_lock = Lock()
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def solver(game):
-    try:
-      import RPi.GPIO as GPIO
-      GPIO.setmode(GPIO.BCM)
-    except:
-      response = "There was an error reading pin " + pin + "."
-      logging.error(response)
-      return
-
-    logger.info ("Solver has started for game: " + game)
-    logger.info("""Current game is: "{0}" """.format(current_game))
-    current_qa = current_game['questions'][current_question]
-    logger.info("""Current question is: "{0}" """.format(current_qa['question']))
-    logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
-
-    questions_n = len(current_game['questions'])
-    for n in range(0, questions_n):
-      pin = current_qa['answer'][n]
-      GPIO.setup(int(pin), GPIO.IN)
-      
-      while True: 
-        if GPIO.input(int(pin)) == True:
-          logger.info("Detected the correct pin.")
-          break
-        else:
-           logger.info("Detected the wrong pin.")
-    return
 
 
 def allowed_file(filename):
@@ -108,22 +83,15 @@ def startGame(game):
         global current_game
         logger.info ("A new game has been requested: " + game)
         current_game = json.load(data_file)
-      server = Thread(target=solver, args=(game,))
-      server.setDaemon(True)
-      server.start()
+      
     except IOError as err:
-        print err
+        logger.err(err)
     return render_template('play.html', name=current_game["name"], question=current_game["questions"][0]['question'])
 
-@app.route("/play/<game>/<question>")
-def playGame(game, question):
-    data = ""
-    try:
-      with open(os.path.join(app.config['UPLOAD_FOLDER'] , game)) as data_file:    
-        data = json.load(data_file)
-    except IOError as err:
-        print err
-    return render_template('play.html', name=data["name"], question=data["questions"][int(question)]['question'])
+@app.route("/question/<next>")
+def nextQuestion(next):
+    global current_game, current_question
+    return render_template('play.html', name="doesn't matter", question=current_game["questions"][int(next)]['question'])
 
 
 @app.route("/respond/<game>")
@@ -133,5 +101,51 @@ def respond(game):
       with open(os.path.join(app.config['UPLOAD_FOLDER'] , game)) as data_file:    
         data = json.load(data_file)
     except IOError as err:
-        print err
+        logger.err(err)
     return render_template('play.html', data=data, game=game)
+
+@socketio.on('my event', namespace='/test')
+def handle_my_custom_event(json):
+    logger.info('========== received json: ' + str(json))
+    with thread_lock:
+      socketio.start_background_task(target=solver)
+
+
+def solver():
+  global current_question, current_game
+  current_question = 0
+  try:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+  except:
+    response = "There was an error setting up GPIO."
+    logging.error(response)
+  
+  logger.info("""Current game is: "{0}" """.format(current_game))
+  current_qa = current_game['questions'][current_question]
+  logger.info("""Current question is: "{0}" """.format(current_qa['question']))
+  logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
+
+  logger.info("timer started")
+  socketio.sleep(5)
+  logger.info("timer expired")
+
+  questions_n = len(current_game['questions'])
+  for n in range(0, questions_n):
+    pin = current_qa['answer'][n]
+    GPIO.setup(int(pin), GPIO.IN)
+    
+    while True: 
+      if GPIO.input(int(pin)) == True:
+        logger.info("Detected the correct pin.")
+        current_question = current_question + 1
+        socketio.emit('next question', current_question, namespace='/test')
+        break
+      else:
+        logger.info("Detected the wrong pin.")
+        current_question = 0
+        socketio.emit('lost', current_question, namespace='/test')
+    
+
+  socketio.emit('win', current_question, namespace='/test')
+  return
