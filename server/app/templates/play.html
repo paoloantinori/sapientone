@@ -1,63 +1,45 @@
-<!doctype html>
-<html class="no-js" lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sapientone</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/foundation.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-  </head>
-  <body>
-    <div class="grid-container">
-      <div class="grid-x grid-padding-x">
-        <div class="large-12 cell">
-          <h1>Sapientone</h1>
-        </div>
-      </div>
-      <div class="alert progress">
-        <div class="progress-meter" style="width: 75%">
-          <p class="progress-meter-text">75%</p>
-        </div>
-      </div>
-      <h1>Gioco: {{ name }}</h1>
-      <h2>Domanda: {{ question }}</h2>
+{% extends "base.html" %}
+{% block content %}
+<h1>Sapientone</h1>
+<div class="alert progress">
+    <div class="progress-meter" style="width: {{ progress }}%">
+      <p class="progress-meter-text">{{ progress }}%</p>
     </div>
+</div>
+<h1>Gioco: {{ name }}</h1>
+<h2>Domanda: {{ question }}</h2>
+{% endblock %}
 
-    <script src="{{ url_for('static', filename='js/vendor/jquery.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/vendor/what-input.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/vendor/foundation.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.slim.js') }}"></script>
+<script type="text/javascript" charset="utf-8">
+    // Connect to the Socket.IO server.
+    // The connection URL has the following format:
+    //     http[s]://<domain>:<port>[/<namespace>]
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + "/test");
 
-    <script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.slim.js') }}"></script>
-    <script type="text/javascript" charset="utf-8">
-        // Connect to the Socket.IO server.
-        // The connection URL has the following format:
-        //     http[s]://<domain>:<port>[/<namespace>]
-        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + "/test");
+    socket.on('next question', function(next){
+      console.log('message: ' + next);
+      // similar behavior as clicking on a link
+      window.location.href = "/question/" + next;
+    });
 
-        socket.on('next question', function(next){
-          console.log('message: ' + next);
-          // similar behavior as clicking on a link
-          window.location.href = "/question/" + next;
-        });
+    socket.on('win', function(next){
+      console.log('message: ' + next);
+      // similar behavior as clicking on a link
+      window.location.href = "/win";
+    });
+    socket.on('lost', function(next){
+      console.log('message: ' + next);
+      // similar behavior as clicking on a link
+      window.location.href = "/lost";
+    });
+    // Event handler for new connections.
+    // The callback function is invoked when a connection with the
+    // server is established.
+    socket.on('connect', function() {
+      socket.emit('my event', {data: 'I\'m connected!'});
+    });
+</script>
+{% endblock %}
 
-        socket.on('win', function(next){
-          console.log('message: ' + next);
-          // similar behavior as clicking on a link
-          window.location.href = "/win";
-        });
-        socket.on('lost', function(next){
-          console.log('message: ' + next);
-          // similar behavior as clicking on a link
-          window.location.href = "/lost";
-        });
-        // Event handler for new connections.
-        // The callback function is invoked when a connection with the
-        // server is established.
-        socket.on('connect', function() {
-          socket.emit('my event', {data: 'I\'m connected!'});
-        });
-    </script>
-  </body>
-</html>

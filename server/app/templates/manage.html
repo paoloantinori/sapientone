@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sapientone</h1>
+<a class="small button" href="upload">Carica nuova definizione di partita</a>
+<h2>Partite disponibili:</h2>
+<ul>
+{% for file in files %}
+  <li><a href="/start/{{ file }}">{{ file }}</a> - <a class="small button" href="/delete/{{ file }}">Elimina</a></li>
+{% endfor %}
+</ul>
+{% endblock %}

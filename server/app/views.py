@@ -86,29 +86,35 @@ def startGame(game):
       
     except IOError as err:
         logger.err(err)
-    return render_template('play.html', name=current_game["name"], question=current_game["questions"][0]['question'])
+    progress = (1.0  / len(current_game["questions"]) ) * 100
+    progress = ('%.2f' % progress).rstrip('0').rstrip('.')
+    return render_template('play.html', 
+                            name=current_game["name"],
+                            question=current_game["questions"][0]['question'],
+                            progress=progress)
 
 @app.route("/question/<next>")
 def nextQuestion(next):
     global current_game, current_question
-    return render_template('play.html', name="doesn't matter", question=current_game["questions"][int(next)]['question'])
+    progress = (1.0  / len(current_game["questions"]) ) * 100
+    progress = ('%.2f' % progress).rstrip('0').rstrip('.')
+    return render_template('play.html', 
+                           question=current_game["questions"][int(next)]['question'],
+                           progress=progress)
 
 
-@app.route("/respond/<game>")
-def respond(game):
-    data = ""
-    try:
-      with open(os.path.join(app.config['UPLOAD_FOLDER'] , game)) as data_file:    
-        data = json.load(data_file)
-    except IOError as err:
-        logger.err(err)
-    return render_template('play.html', data=data, game=game)
+@app.route('/manage')
+def manage():
+    files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
+    return render_template('manage.html',
+                           files= files)
 
-@socketio.on('my event', namespace='/test')
-def handle_my_custom_event(json):
-    logger.info('========== received json: ' + str(json))
-    with thread_lock:
-      socketio.start_background_task(target=solver)
+@app.route('/delete/<game>')
+def delete(game):
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'] , game))
+    files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
+    return render_template('manage.html',
+                           files= files)
 
 
 def solver():
