@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from app import app,socketio
 from flask import render_template, request, redirect, url_for, copy_current_request_context
 from flask_socketio import send, emit
-import json
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
@@ -140,7 +139,7 @@ def create():
         new_question["answer"] = request.form['a'+ i]
         new_game["questions"].append(new_question)
     with open(os.path.join(app.config['UPLOAD_FOLDER'] , new_game["name"] + ".json"),"w") as newfile:
-        newfile.write(json.dumps(new_game))
+        newfile.write(json.dumps(new_game, indent=True))
     return redirect('/')
 
 
