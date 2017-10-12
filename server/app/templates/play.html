@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Sapientone</h1>
+<h1>Sapientone - {{ name }}</h1>
 <div class="alert progress">
     <div class="progress-meter" style="width: {{ progress }}%">
       <p class="progress-meter-text">{{ progress }}%</p>
     </div>
-    <span id="timer" class="warning badge"></span>
 </div>
-<h1>Gioco: {{ name }}</h1>
-<h2>Domanda: {{ question }}</h2>
+<div class="float-right">
+  <span>Tempo restante: </span><span id="timer">&nbsp;</span>
+</div>
+<h2>Domanda {{ question_n }}: {{ question }}</h2>
 {% endblock %}
 
 {% block js %}
@@ -18,7 +19,7 @@
     // The connection URL has the following format:
     //     http[s]://<domain>:<port>[/<namespace>]
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + "/test");
-
+    var $timer = $("#timer");
     socket.on('next question', function(next){
       console.log('message: ' + next);
       // similar behavior as clicking on a link
@@ -36,8 +37,7 @@
       window.location.href = "/lost";
     });
     socket.on('tick', function(timeleft){
-      console.log('timeleft: ' + timeleft);
-      $("#timer").text(timeleft);
+      $timer.text(timeleft);
     });
     socket.on('timeout', function(){
       // similar behavior as clicking on a link

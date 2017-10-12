@@ -87,21 +87,23 @@ def startGame(game):
       
     except IOError as err:
         logger.err(err)
-    progress = (1.0  / len(current_game["questions"]) ) * 100
-    progress = ('%.2f' % progress).rstrip('0').rstrip('.')
+    prog = progress()
     return render_template('play.html', 
                             name=current_game["name"],
-                            question=current_game["questions"][0]['question'],
-                            progress=progress)
+                            question=current_game["questions"][current_question]['question'],
+                            question_n = current_question + 1,
+                            progress=prog)
 
 @app.route("/question/<next>")
 def nextQuestion(next):
-    global current_game, current_question
-    progress = (1.0  / len(current_game["questions"]) ) * 100
-    progress = ('%.2f' % progress).rstrip('0').rstrip('.')
+    global current_game
+    next = int(next)
+    prog = progress()
     return render_template('play.html', 
-                           question=current_game["questions"][int(next)]['question'],
-                           progress=progress)
+                           name=current_game["name"],
+                           question=current_game["questions"][next]['question'],
+                           question_n = next + 1,
+                           progress=prog)
 
 
 @app.route('/manage')
@@ -120,27 +122,24 @@ def delete(game):
 
 @app.route('/win')
 def win():
-    global game_in_progress
-    game_in_progress = False
+    clean()
     return render_template('win.html')
 
 @app.route('/lost')
 def lost():
-    global game_in_progress
-    game_in_progress = False
+    clean()
     return render_template('lost.html')
 
 @app.route('/timeout')
 def timedout():
-    global timeout, game_in_progress
-    game_in_progress = False
+    global timeout
     timeout = -1
+    clean()
     return render_template('timeout.html')
 
 @socketio.on('connected', namespace='/test')
 def handle_my_custom_event(json):
     global game_in_progress
-    logger.info('========== received json: ' + str(json))
     if not game_in_progress:
         with thread_lock:
             game_in_progress = True
@@ -168,18 +167,18 @@ def solver():
   logger.info("""Current question is: "{0}" """.format(current_qa['question']))
   logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
 
-#   logger.info("timer started")
-#   socketio.sleep(5)
-#   logger.info("timer expired")
-#   socketio.emit('next question', current_question +1, namespace='/test')
-#   return
+  logger.info("timer started")
+  socketio.sleep(5)
+  logger.info("timer expired")
+  socketio.emit('next question', current_question +1, namespace='/test')
+  return
 
   questions_n = len(current_game['questions'])
   for n in range(0, questions_n):
     pin = current_qa['answer'][n]
     GPIO.setup(int(pin), GPIO.IN)
     
-    while True: 
+    while game_in_progress: 
       if GPIO.input(int(pin)) == True:
         logger.info("Detected the correct pin.")
         current_question = current_question + 1
@@ -189,6 +188,7 @@ def solver():
         logger.info("Detected the wrong pin.")
         current_question = 0
         socketio.emit('lost', current_question, namespace='/test')
+        return
     
 
   socketio.emit('win', current_question, namespace='/test')
@@ -196,11 +196,18 @@ def solver():
 
 def timer():
     global timeout
-    while True:
+    while game_in_progress:
       if(timeout == 0):
           socketio.emit('timeout',  namespace='/test')
       socketio.emit('tick', timeout    , namespace='/test')
       socketio.sleep(1)
       timeout = timeout - 1
 
-      
+def clean():
+    global game_in_progress
+    game_in_progress = False
+
+def progress():
+    prog = (1.0  / len(current_game["questions"]) ) * 100
+    prog = ('%.2f' % prog).rstrip('0').rstrip('.')
+    return prog
