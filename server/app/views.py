@@ -13,8 +13,9 @@ ALLOWED_EXTENSIONS = set(['txt', 'json'])
 
 current_question = 0
 current_game = {}
-server = None
 thread_lock = Lock()
+timeout = -1
+game_in_progress = False
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -116,16 +117,45 @@ def delete(game):
     return render_template('manage.html',
                            files= files)
 
-@socketio.on('my event', namespace='/test')
+
+@app.route('/win')
+def win():
+    global game_in_progress
+    game_in_progress = False
+    return render_template('win.html')
+
+@app.route('/lost')
+def lost():
+    global game_in_progress
+    game_in_progress = False
+    return render_template('lost.html')
+
+@app.route('/timeout')
+def timedout():
+    global timeout, game_in_progress
+    game_in_progress = False
+    timeout = -1
+    return render_template('timeout.html')
+
+@socketio.on('connected', namespace='/test')
 def handle_my_custom_event(json):
+    global game_in_progress
     logger.info('========== received json: ' + str(json))
-    with thread_lock:
-      socketio.start_background_task(target=solver)
+    if not game_in_progress:
+        with thread_lock:
+            game_in_progress = True
+            socketio.start_background_task(target=solver)
 
 
 def solver():
-  global current_question, current_game
+  logger.info("__invoking solver")
+  global current_question, current_game, timeout
   current_question = 0
+
+  if "timer" in current_game:
+    timeout = int(current_game["timer"]["timeout"])
+    socketio.start_background_task(target=timer)
+
   try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
@@ -137,6 +167,12 @@ def solver():
   current_qa = current_game['questions'][current_question]
   logger.info("""Current question is: "{0}" """.format(current_qa['question']))
   logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
+
+#   logger.info("timer started")
+#   socketio.sleep(5)
+#   logger.info("timer expired")
+#   socketio.emit('next question', current_question +1, namespace='/test')
+#   return
 
   questions_n = len(current_game['questions'])
   for n in range(0, questions_n):
@@ -157,3 +193,14 @@ def solver():
 
   socketio.emit('win', current_question, namespace='/test')
   return
+
+def timer():
+    global timeout
+    while True:
+      if(timeout == 0):
+          socketio.emit('timeout',  namespace='/test')
+      socketio.emit('tick', timeout    , namespace='/test')
+      socketio.sleep(1)
+      timeout = timeout - 1
+
+      

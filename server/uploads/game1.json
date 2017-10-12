@@ -1,7 +1,7 @@
 {
     "name": "Jungla",
     "timer": {
-        "timeout": "180"
+        "timeout": "20"
     },
     "questions": [
         {

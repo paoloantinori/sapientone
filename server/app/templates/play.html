@@ -5,6 +5,7 @@
     <div class="progress-meter" style="width: {{ progress }}%">
       <p class="progress-meter-text">{{ progress }}%</p>
     </div>
+    <span id="timer" class="warning badge"></span>
 </div>
 <h1>Gioco: {{ name }}</h1>
 <h2>Domanda: {{ question }}</h2>
@@ -36,12 +37,17 @@
     });
     socket.on('tick', function(timeleft){
       console.log('timeleft: ' + timeleft);
+      $("#timer").text(timeleft);
+    });
+    socket.on('timeout', function(){
+      // similar behavior as clicking on a link
+      window.location.href = "/timeout";
     });
     // Event handler for new connections.
     // The callback function is invoked when a connection with the
     // server is established.
     socket.on('connect', function() {
-      socket.emit('my event', {data: 'I\'m connected!'});
+      socket.emit('connected', {data: 'I\'m connected!'});
     });
 </script>
 {% endblock %}
