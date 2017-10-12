@@ -125,6 +125,12 @@ def win():
     clean()
     return render_template('win.html')
 
+@app.route('/crea')
+def create():
+    logger.info(url_for('static', filename='crea.html'))
+    return app.send_static_file(url_for('static', filename='crea.html'))
+
+
 @app.route('/lost')
 def lost():
     clean()
@@ -167,11 +173,11 @@ def solver():
   logger.info("""Current question is: "{0}" """.format(current_qa['question']))
   logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
 
-  logger.info("timer started")
-  socketio.sleep(5)
-  logger.info("timer expired")
-  socketio.emit('next question', current_question +1, namespace='/test')
-  return
+  #logger.info("timer started")
+  #socketio.sleep(5)
+  #logger.info("timer expired")
+  #socketio.emit('next question', current_question +1, namespace='/test')
+  #return
 
   questions_n = len(current_game['questions'])
   for n in range(0, questions_n):
