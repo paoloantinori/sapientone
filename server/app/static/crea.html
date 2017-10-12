@@ -1,0 +1,75 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sapientone</title>
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="css/app.css">
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-x grid-padding-x">
+        <div class="large-12 cell">
+          <h1>Sapientone</h1>
+        </div>
+      </div>
+    <div id="blueprint" style="display: none;">
+            <label>
+            Domanda
+            <textarea name="q" placeholder="ex. Trova i topolini nascosti"></textarea>
+            </label>
+            <label>
+                Risposta
+                <input name="a" type="text" placeholder="2 5" aria-describedby="helpRisposta">
+            </label>
+            <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
+    </div>
+
+      <form action="/crea"  method="post" name="crea">
+        <label>Nome Scheda
+          <input name="name" type="text" placeholder="ex. Jungla">
+        </label>
+        <div>Domande:</div>
+
+        <div class="riga">
+            <label>
+            Domanda
+            <textarea  name="q1" placeholder="ex. Trova i topolini nascosti"></textarea>
+            </label>
+            <label>
+                Risposta
+                <input name="a1" type="text" placeholder="2 5" aria-describedby="helpRisposta">
+            </label>
+            <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
+        </div>
+        <button type="button" class="button" onclick="addLine();">Aggiungi Domanda</button>
+        <button type="button" class="button" onclick="submit();">Crea</button>
+      </form>
+    </div>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/what-input.js"></script>
+    <script src="js/vendor/foundation.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        var i = 1;
+        function addLine(){
+            i++;
+            $newQuestion = $("#blueprint").clone(true);
+            $newQuestion.attr("style", "");
+            $newQuestion.attr("id", "");
+            $newQuestion.attr("class", "riga");
+
+            $('textarea[name="q"]', $newQuestion).attr("name", "q"+i);
+            $('input[name="a"]', $newQuestion).attr("name", "a"+i);
+            $(".riga:last").after( $newQuestion );
+        }
+        function submit() {
+            $("form").submit();
+        }
+        
+    </script>
+  </body>
+</html>

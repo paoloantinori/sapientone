@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 from app import app,socketio
 from flask import render_template, request, redirect, url_for, copy_current_request_context
 from flask_socketio import send, emit
+import json
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
@@ -125,10 +126,22 @@ def win():
     clean()
     return render_template('win.html')
 
-@app.route('/crea')
+@app.route('/crea', methods=[ 'POST'])
 def create():
-    logger.info(url_for('static', filename='crea.html'))
-    return app.send_static_file(url_for('static', filename='crea.html'))
+    questions_n = (len(request.form) - 1) / 2
+    new_game = {}
+    new_game["name"] = request.form['name']
+    new_game["questions"] = []
+    
+    for i in range(1, questions_n + 1):
+        i = str(i)
+        new_question = {}
+        new_question["question"] = request.form['q'+ i]
+        new_question["answer"] = request.form['a'+ i]
+        new_game["questions"].append(new_question)
+    with open(os.path.join(app.config['UPLOAD_FOLDER'] , new_game["name"] + ".json"),"w") as newfile:
+        newfile.write(json.dumps(new_game))
+    return redirect('/')
 
 
 @app.route('/lost')
