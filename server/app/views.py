@@ -116,6 +116,12 @@ def delete(game):
     return render_template('manage.html',
                            files= files)
 
+@socketio.on('my event', namespace='/test')
+def handle_my_custom_event(json):
+    logger.info('========== received json: ' + str(json))
+    with thread_lock:
+      socketio.start_background_task(target=solver)
+
 
 def solver():
   global current_question, current_game
@@ -131,10 +137,6 @@ def solver():
   current_qa = current_game['questions'][current_question]
   logger.info("""Current question is: "{0}" """.format(current_qa['question']))
   logger.info("""Current right answer is: "{0}" """.format(current_qa['answer']))
-
-  logger.info("timer started")
-  socketio.sleep(5)
-  logger.info("timer expired")
 
   questions_n = len(current_game['questions'])
   for n in range(0, questions_n):
