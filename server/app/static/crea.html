@@ -17,12 +17,12 @@
       </div>
     <div id="blueprint" style="display: none;">
             <label>
-            Domanda
+            Domanda <button type="button" class="button close_button" onclick="deleteLine($(this))">Elimina</button>
             <textarea name="q" placeholder="ex. Trova i topolini nascosti"></textarea>
             </label>
             <label>
                 Risposta
-                <input name="a" type="text" placeholder="2 5" aria-describedby="helpRisposta">
+                <input name="a" type="text" placeholder="ex. 2 5" aria-describedby="helpRisposta">
             </label>
             <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
     </div>
@@ -31,11 +31,11 @@
         <label>Nome Scheda
           <input name="name" type="text" placeholder="ex. Jungla">
         </label>
-        <div>Domande:</div>
+        <div id="domande">Domande:</div>
 
         <div class="riga">
             <label>
-            Domanda
+            Domanda <button type="button" class="button close_button" onclick="deleteLine($(this))">Elimina</button>
             <textarea  name="q1" placeholder="ex. Trova i topolini nascosti"></textarea>
             </label>
             <label>
@@ -64,12 +64,36 @@
 
             $('textarea[name="q"]', $newQuestion).attr("name", "q"+i);
             $('input[name="a"]', $newQuestion).attr("name", "a"+i);
-            $(".riga:last").after( $newQuestion );
+            $last = $(".riga:last");
+            if($last.length > 0){
+              $last.after( $newQuestion );
+            }
+            else{
+              console.log("goes after domande");
+              $("#domande").after( $newQuestion);
+            }
         }
         function submit() {
+            recalculateIds();
             $("form").submit();
         }
-        
+
+        function deleteLine($button) {
+          $button.parent().parent().remove();
+        }
+
+        function recalculateIds(){
+          var i = 1;
+          $("div.riga textarea").each(function(id, el){
+            $(el).attr("name", "q"+i);
+          });
+          i = 1;
+          $("div.riga input").each(function(id, el){
+            $(el).attr("name", "a"+i);
+          });
+        }
+
     </script>
+
   </body>
 </html>
