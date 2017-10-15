@@ -6,10 +6,11 @@
       <p class="progress-meter-text">{{ progress }}%</p>
     </div>
 </div>
-<div class="float-right">
-  <span>Tempo restante: </span><span id="timer">&nbsp;</span>
+<div class="float-right hide">
+  <span>Tempo restante: </span><span id="timer" >&nbsp;</span>
 </div>
 <h2>Domanda {{ question_n }}: {{ question }}</h2>
+<a class="button small" href="/lost">Mi arrendo!</a>
 {% endblock %}
 
 {% block js %}
@@ -37,6 +38,9 @@
       window.location.href = "/lost";
     });
     socket.on('tick', function(timeleft){
+      if($timer.parent().hasClass('hide')){
+        $timer.parent().toggleClass("hide");
+      }
       $timer.text(timeleft);
     });
     socket.on('timeout', function(){

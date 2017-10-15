@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sapientone</h1>
+<a class="small button" href="upload">Carica</a> <a class="small button" href="manage">Modifica</a> <a class="small button" href="/static/crea.html">Crea</a>
+<div class="grid-x grid-padding-x">
+      </div>
+    <div id="blueprint" style="display: none;">
+        <label>
+        Domanda 
+        <textarea name="q" placeholder="ex. Trova i topolini nascosti"></textarea>
+        </label>
+        <label>
+            Risposta
+            <input name="a" type="text" placeholder="ex. 2 5" aria-describedby="helpRisposta">
+        </label>
+        <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
+        <button type="button" class="alert button small close_button float-right" onclick="deleteLine($(this))">Elimina</button>
+    </div>
+    <form action="/created"  method="post" name="crea">
+        <label>Nome Scheda
+            <input name="name" type="text" placeholder="ex. Jungla" value="{{ game["name"] }}"!>
+        </label>
+        <label>Timeout
+            <input name="timer" type="text" placeholder="180" value="{{ game["timer"]["timeout"] }}"!>
+        </label>
+              
+        <div id="domande">Domande:</div>
+{% if mode == "create" %}
+        <div class="riga">
+            <label>
+            Domanda 
+            <textarea  name="q1" placeholder="ex. Trova i topolini nascosti"></textarea>
+            </label>
+            <label>
+                Risposta
+                <input name="a1" type="text" placeholder="2 5" aria-describedby="helpRisposta">
+            </label>
+            <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
+            <button type="button" class="alert button small close_button float-right" onclick="deleteLine($(this))">Elimina</button>
+        </div>
+{% endif %}
+
+{% if mode == "edit" %}
+{% for q in game["questions"] %}
+<div class="riga">
+    <label>
+    Domanda 
+    <textarea  name="q1" placeholder="ex. Trova i topolini nascosti">{{ q["question"] }}</textarea>
+    </label>
+    <label>
+        Risposta
+        <input name="a1" type="text" placeholder="2 5" aria-describedby="helpRisposta" value="{{ q["answer"]|join(' ') }}">
+    </label>
+    <p class="help-text" id="helpRisposta">I numeri corrispondono ai bottoni del Sapientone!</p>
+    <button type="button" class="small button close_button float-right" onclick="deleteLine($(this))">Elimina</button>
+</div>
+{% endfor %}
+{% endif %}
+
+<button type="button" class="button" onclick="addLine();">Aggiungi Domanda</button>
+<button type="button" class="button" onclick="recalculateIds(true);">Crea</button>
+</form>
+{% endblock %}
+
+{% block js %}
+<script>
+    var i = 1;
+    function addLine(){
+        i++;
+        $newQuestion = $("#blueprint").clone(true);
+        $newQuestion.attr("style", "");
+        $newQuestion.attr("id", "");
+        $newQuestion.attr("class", "riga");
+
+        $('textarea[name="q"]', $newQuestion).attr("name", "q"+i);
+        $('input[name="a"]', $newQuestion).attr("name", "a"+i);
+        $last = $(".riga:last");
+        if($last.length > 0){
+            $last.after( $newQuestion );
+        }
+        else{
+            $("#domande").after( $newQuestion);
+        }
+    }
+
+    function deleteLine($button) {
+        $button.parent().parent().remove();
+    }
+
+    function recalculateIds(andSubmit){
+        $("div.riga textarea").each(function(id, el){
+            var index = id + 1;
+            $(el).attr("name", "q" + index);
+        });
+        $("div.riga input").each(function(id, el){
+            var index = id + 1;
+            $(el).attr("name", "a" + index);
+        });
+        if(andSubmit){
+            $("form").submit();
+        }
+    }
+
+    </script>
+{% endblock %}

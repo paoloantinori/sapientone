@@ -73,7 +73,7 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect("/")
+            return redirect(url_for("index"))
     return render_template('upload.html')
 
 
@@ -84,10 +84,11 @@ def startGame(game):
         global current_game
         logger.info ("A new game has been requested: " + game)
         current_game = json.load(data_file)
-      
     except IOError as err:
-        logger.err(err)
+        return redirect(url_for("index"))
     prog = progress()
+    global game_in_progress
+    game_in_progress = False
     return render_template('play.html', 
                             name=current_game["name"],
                             question=current_game["questions"][current_question]['question'],
@@ -105,7 +106,6 @@ def nextQuestion(next):
                            question_n = next + 1,
                            progress=prog)
 
-
 @app.route('/manage')
 def manage():
     files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
@@ -114,21 +114,43 @@ def manage():
 
 @app.route('/delete/<game>')
 def delete(game):
-    os.remove(os.path.join(app.config['UPLOAD_FOLDER'] , game))
+    try:
+        logger.info("opening {0}".format(game,))
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'] , game))
+    except:
+        return redirect(url_for("manage"))
     files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
     return render_template('manage.html',
                            files= files)
 
+@app.route('/create')
+def form():
+    mode = "create"
+    return render_template('create.html',
+                           mode= mode)
 
-@app.route('/win')
-def win():
-    clean()
-    return render_template('win.html')
+@app.route('/edit/<game>')
+def edit(game): 
+    mode = "edit"
+    game_to_edit = {}
+    try:
+        logger.info("opening {0}".format(game,))
+        with open(os.path.join(app.config['UPLOAD_FOLDER'] , game)) as data_file:
+            game_to_edit = json.load(data_file)
+    except:
+        return redirect(url_for("manage"))
+    return render_template('create.html',
+                           mode= mode,
+                           game = game_to_edit)
 
-@app.route('/crea', methods=[ 'POST'])
-def create():
+
+@app.route('/created', methods=[ 'POST'])
+def created():
     questions_n = (len(request.form) - 1) / 2
     new_game = {}
+    new_game["name"] = request.form['name']
+    if(request.form["timer"] != None):
+        new_game["timer"] = { "timeout" : request.form["timer"]}
     new_game["name"] = request.form['name']
     new_game["questions"] = []
     
@@ -140,8 +162,13 @@ def create():
         new_game["questions"].append(new_question)
     with open(os.path.join(app.config['UPLOAD_FOLDER'] , new_game["name"] + ".json"),"w") as newfile:
         newfile.write(json.dumps(new_game, indent=True))
-    return redirect('/')
+    return redirect(url_for("index"))
 
+
+@app.route('/win')
+def win():
+    clean()
+    return render_template('win.html')
 
 @app.route('/lost')
 def lost():
@@ -165,13 +192,13 @@ def handle_my_custom_event(json):
 
 
 def solver():
-  logger.info("__invoking solver")
   global current_question, current_game, timeout
   current_question = 0
 
   if "timer" in current_game:
     timeout = int(current_game["timer"]["timeout"])
-    socketio.start_background_task(target=timer)
+    if( timeout >= 0):
+        socketio.start_background_task(target=timer)
 
   try:
     import RPi.GPIO as GPIO

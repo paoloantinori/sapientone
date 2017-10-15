@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Sapientone</h1>
-<a class="small button" href="upload">Carica nuova definizione di partita</a>
+{% include 'navbar.html' %}
 <h2>Partite disponibili:</h2>
 <ul>
 {% for file in files %}
-  <li><a href="/start/{{ file }}">{{ file }}</a> - <a class="small button" href="/delete/{{ file }}">Elimina</a></li>
+  <li><a href="/start/{{ file }}">{{ file | replace(".json", "")}}</a> - <a class="small button" href="/edit/{{ file }}">Modifica</a> <a class="small button alert" href="/delete/{{ file }}">Elimina</a></li>
 {% endfor %}
 </ul>
 {% endblock %}
